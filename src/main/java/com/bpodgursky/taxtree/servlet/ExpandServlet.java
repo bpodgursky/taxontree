@@ -7,7 +7,7 @@ import com.bpodgursky.taxtree.JSONServlet;
 import com.bpodgursky.taxtree.QueryWrapper;
 import com.bpodgursky.taxtree.TaxonInfo;
 
-public class GraphServlet implements JSONServlet.Processor {
+public class ExpandServlet implements JSONServlet.Processor {
 
   private static class GraphResponse {
     private final Collection<TaxonInfo> children;
@@ -21,12 +21,11 @@ public class GraphServlet implements JSONServlet.Processor {
 
   @Override
   public Object getData(QueryWrapper query, Map<String, String> parameters) throws Exception {
-
     Long taxonId = Long.parseLong(parameters.get("taxon_id"));
 
     return new GraphResponse(
         query.children(taxonId),
-        query.parentsQuery(taxonId)
+        query.parents(taxonId)
     );
   }
 

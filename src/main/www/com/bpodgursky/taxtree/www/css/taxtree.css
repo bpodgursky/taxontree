@@ -1,0 +1,36 @@
+.main-svg {
+    position: fixed;
+    left: 0;
+    height: 1000px;
+    width: 100%;
+    border: 1px solid #999;
+}
+
+.edge rect {
+    fill: #fff
+}
+
+.edgePath path {
+    stroke: #333;
+    stroke-width: 1.5px;
+}
+
+.node > rect {
+    stroke-width: 1px;
+    stroke: #333;
+    fill: none;
+    opacity: 0.5;
+}
+
+g {
+    pointer-events: all;
+}
+
+.node-collapsed > rect {
+    stroke-width: 2px;
+    stroke: #00137d;
+}
+
+.node {
+    cursor: pointer;
+}

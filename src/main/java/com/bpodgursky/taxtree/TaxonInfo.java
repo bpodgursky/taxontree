@@ -27,4 +27,24 @@ public class TaxonInfo {
     this.commonNameRecord = commonNameRecord.intoMap();
     this.commonNameElementRecord = commonNameElementRecord.intoMap();
   }
+
+  public Map<String, Object> getTaxonRecord() {
+    return taxonRecord;
+  }
+
+  public Map<String, Object> getTaxonNameElementRecord() {
+    return taxonNameElementRecord;
+  }
+
+  public Map<String, Object> getScientificNameElementRecord() {
+    return scientificNameElementRecord;
+  }
+
+  public Map<String, Object> getCommonNameRecord() {
+    return commonNameRecord;
+  }
+
+  public Map<String, Object> getCommonNameElementRecord() {
+    return commonNameElementRecord;
+  }
 }

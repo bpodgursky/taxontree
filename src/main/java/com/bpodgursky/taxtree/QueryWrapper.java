@@ -11,6 +11,7 @@ import com.bpodgursky.taxtree.tables.ScientificNameElement;
 import com.bpodgursky.taxtree.tables.Taxon;
 import com.bpodgursky.taxtree.tables.TaxonNameElement;
 import com.google.common.collect.Lists;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -33,18 +34,7 @@ public class QueryWrapper {
     this.context = DSL.using(conn, SQLDialect.MYSQL);
   }
 
-  public Select<Record> taxonQuery(long taxonId) {
-    return context.select()
-        .from(TAXON)
-        .join(TAXON_NAME_ELEMENT)
-        .on(TAXON.ID.equal(TAXON_NAME_ELEMENT.TAXON_ID))
-        .join(SCIENTIFIC_NAME_ELEMENT)
-        .on(SCIENTIFIC_NAME_ELEMENT.ID.equal(TAXON_NAME_ELEMENT.SCIENTIFIC_NAME_ELEMENT_ID))
-        .where(TAXON.ID.equal(UInteger.valueOf(taxonId)))
-        .limit(1);
-  }
-
-  public Collection<TaxonInfo> parentsQuery(long childTaxonId) {
+  public Collection<TaxonInfo> parents(long childTaxonId) {
 
     Taxon child = TAXON.as("child_taxon");
     Taxon parent = TAXON.as("parent_taxon");
@@ -78,23 +68,11 @@ public class QueryWrapper {
   }
 
   public Collection<TaxonInfo> children(long parentTaxonId) {
-    return context.select()
-        .from(TAXON)
-        .leftOuterJoin(TAXON_NAME_ELEMENT)
-        .on(TAXON.ID.equal(TAXON_NAME_ELEMENT.TAXON_ID))
-        .leftOuterJoin(SCIENTIFIC_NAME_ELEMENT)
-        .on(SCIENTIFIC_NAME_ELEMENT.ID.equal(TAXON_NAME_ELEMENT.SCIENTIFIC_NAME_ELEMENT_ID))
-        .leftOuterJoin(COMMON_NAME)
-        .on(COMMON_NAME.TAXON_ID.equal(TAXON.ID))
-        .leftOuterJoin(COMMON_NAME_ELEMENT)
-        .on(COMMON_NAME.COMMON_NAME_ELEMENT_ID.equal(COMMON_NAME_ELEMENT.ID))
-        .where(TAXON_NAME_ELEMENT.PARENT_ID.equal(UInteger.valueOf(parentTaxonId))).fetch().stream().map(record -> new TaxonInfo(
-            record.into(TAXON),
-            record.into(TAXON_NAME_ELEMENT),
-            record.into(SCIENTIFIC_NAME_ELEMENT),
-            record.into(COMMON_NAME),
-            record.into(COMMON_NAME_ELEMENT)
-        )).collect(Collectors.toList());
+    return taxonInfo(TAXON_NAME_ELEMENT.PARENT_ID.equal(UInteger.valueOf(parentTaxonId)));
+  }
+
+  public TaxonInfo id(long taxonId) {
+    return Accessors.only(taxonInfo(TAXON.ID.equal(UInteger.valueOf(taxonId))));
   }
 
   public List<String> scientificName(String commonName) {
@@ -121,4 +99,36 @@ public class QueryWrapper {
     return names;
 
   }
+
+  private Collection<TaxonInfo> taxonInfo(Condition condition) {
+    return context.select()
+        .from(TAXON)
+        .leftOuterJoin(TAXON_NAME_ELEMENT)
+        .on(TAXON.ID.equal(TAXON_NAME_ELEMENT.TAXON_ID))
+        .leftOuterJoin(SCIENTIFIC_NAME_ELEMENT)
+        .on(SCIENTIFIC_NAME_ELEMENT.ID.equal(TAXON_NAME_ELEMENT.SCIENTIFIC_NAME_ELEMENT_ID))
+        .leftOuterJoin(COMMON_NAME)
+        .on(COMMON_NAME.TAXON_ID.equal(TAXON.ID))
+        .leftOuterJoin(COMMON_NAME_ELEMENT)
+        .on(COMMON_NAME.COMMON_NAME_ELEMENT_ID.equal(COMMON_NAME_ELEMENT.ID))
+        .where(condition).fetch().stream().map(record -> new TaxonInfo(
+            record.into(TAXON),
+            record.into(TAXON_NAME_ELEMENT),
+            record.into(SCIENTIFIC_NAME_ELEMENT),
+            record.into(COMMON_NAME),
+            record.into(COMMON_NAME_ELEMENT)
+        )).collect(Collectors.toList());
+  }
+
+  private Select<Record> taxonQuery(long taxonId) {
+    return context.select()
+        .from(TAXON)
+        .join(TAXON_NAME_ELEMENT)
+        .on(TAXON.ID.equal(TAXON_NAME_ELEMENT.TAXON_ID))
+        .join(SCIENTIFIC_NAME_ELEMENT)
+        .on(SCIENTIFIC_NAME_ELEMENT.ID.equal(TAXON_NAME_ELEMENT.SCIENTIFIC_NAME_ELEMENT_ID))
+        .where(TAXON.ID.equal(UInteger.valueOf(taxonId)))
+        .limit(1);
+  }
+
 }

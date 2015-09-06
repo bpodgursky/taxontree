@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <title>Taxon Tree</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script type="text/javascript" src="resources/jquery-2.1.4.min.js"></script>
+  <script type="text/javascript" src="js/multimap.js"></script>
+  <script type="text/javascript" src="js/bimap.js"></script>
+  <script type="text/javascript" src="js/backed_bi_graph.js"></script>
+
+  <script type="text/javascript" src="resources/d3.v3.min.js" charset="utf-8"></script>
+  <script type="text/javascript" src="resources/dagre-d3.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="css/taxtree.css">
+
+
+</head>
+
+
+<body>
+
+<div id="attach">
+  <svg id="svg-canvas" class="main-svg">
+    <g transform="translate(20, 20)"/>
+  </svg>
+</div>
+
+</body>
+
+
+<script>
+
+  var graph = new BackedBiGraph(
+      function (id, callback) {
+        $.ajax({
+          type: 'GET',
+          dataType: 'html',
+          url: "expand_taxon",
+          data: {
+            taxon_id: id
+          },
+          success: function (response) {
+            var data = JSON.parse(response);
+            callback(data.parents, data.children);
+          }
+        });
+      },
+      function (id, callback) {
+        $.ajax({
+          type: 'GET',
+          dataType: 'html',
+          url: "find_taxon",
+          data: {
+            taxon_id: id
+          },
+          success: function (response) {
+            callback(JSON.parse(response));
+          }
+        })
+      },
+      function (record) {
+        return record.taxonRecord.id.value;
+      },
+      renderGraph
+  );
+
+  var g = new dagreD3.graphlib.Graph()
+      .setGraph({rankdir: 'LR'})
+      .setDefaultEdgeLabel(function () {
+        return {};
+      });
+
+  var render = new dagreD3.render();
+
+  var svg = d3.select("#svg-canvas");
+  var svgGroup = d3.select("svg g");
+
+  //  enable zoom and scrolling
+  svgGroup.attr("transform", "translate(5, 5)");
+  svg.call(d3.behavior.zoom().on("zoom", function redraw() {
+    svgGroup.attr("transform",
+        "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+  }));
+
+  function renderGraph(diff) {
+
+    d3.selectAll(".node").remove();
+    d3.selectAll(".edgePath").remove();
+
+    Object.keys(diff.newNodes).forEach(function (id) {
+      var node = diff.newNodes[id];
+      g.setNode(id, {
+        label: node.scientificNameElementRecord.name_element,
+        //  round edges
+        class: "node-collapsed",
+        rx: 5,
+        ry: 5
+      });
+    });
+
+    Object.keys(diff.expandedNodes).forEach(function (id) {
+      delete g.node(id).class;
+    });
+
+    Object.keys(diff.collapsedNodes).forEach(function (id) {
+      g.node(id).class = "node-collapsed";
+    });
+
+    Object.keys(diff.removedNodes).forEach(function (id) {
+      g.removeNode(id);
+    });
+
+    diff.newEdges.forEach(function (e) {
+      g.setEdge(e.source, e.target, {
+        lineInterpolate: "basis"
+      });
+    });
+
+    diff.removedEdges.forEach(function (e) {
+      g.removeEdge(e.source, e.target);
+    });
+
+    render(svgGroup, g);
+
+    svg.selectAll(".node")
+        .on("click", function (d) {
+          d3.event.preventDefault();
+          graph.toggleExpand(d);
+        })
+
+  }
+
+  graph.insert(22032961);
+
+  setTimeout(function () {
+    graph.expand(22032961);
+  }, 1000);
+
+</script>
+
+
+</html>

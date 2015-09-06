@@ -67,6 +67,6 @@ public class JSONServlet extends HttpServlet {
   }
 
   public interface Processor {
-    Object getData(QueryWrapper rldb, Map<String, String> parameters) throws Exception;
+    Object getData(QueryWrapper query, Map<String, String> parameters) throws Exception;
   }
 }

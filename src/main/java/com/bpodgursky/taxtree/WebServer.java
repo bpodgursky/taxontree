@@ -6,7 +6,8 @@ import java.util.EnumSet;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import com.bpodgursky.taxtree.servlet.GraphServlet;
+import com.bpodgursky.taxtree.servlet.ExpandServlet;
+import com.bpodgursky.taxtree.servlet.FindServlet;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -44,7 +45,9 @@ public class WebServer implements Runnable {
       ThreadLocalConnection local = new ThreadLocalConnection(url, userName, password);
       WebAppContext context = new WebAppContext(warUrlString, "/");
 
-      context.addServlet(new ServletHolder(new JSONServlet(new GraphServlet(), local)), "/expand_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new ExpandServlet(), local)), "/expand_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/find_taxon");
+
       context.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
       uiServer.setHandler(context);

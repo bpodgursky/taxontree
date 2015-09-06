@@ -180,6 +180,13 @@
       <resource>
         <directory>src/main/resources</directory>
         <includes>
+          <include>**/*.xml</include>
+        </includes>
+      </resource>
+
+      <resource>
+        <directory>src/main/www/</directory>
+        <includes>
           <include>**/*.gz</include>
           <include>**/*.js</include>
           <include>**/*.jsp</include>
@@ -192,9 +199,10 @@
           <include>**/*.txt</include>
           <include>**/*.dump</include>
           <include>**/*.xml</include>
-          <include>**/*.properties</include>
         </includes>
       </resource>
+
+
     </resources>
 
   </build>
