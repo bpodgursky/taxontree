@@ -26,11 +26,24 @@ g {
     pointer-events: all;
 }
 
-.node-collapsed > rect {
-    stroke-width: 2px;
-    stroke: #00137d;
+.node {
 }
 
-.node {
+.expand-toggle {
+    display: inline-block;
+    margin-left: 8px;
     cursor: pointer;
+    max-height:100%;
+}
+
+.expanded-img {
+    background-color: #ff0040;
+}
+
+.collapsed-img {
+    background-color: #b3ffa1;
+}
+
+.sci-name-element {
+    display: inline-block;
 }

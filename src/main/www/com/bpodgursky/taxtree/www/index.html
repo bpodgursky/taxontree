@@ -85,28 +85,58 @@
         "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
   }));
 
+  function getImg(expanded) {
+    if (expanded) {
+      return 'images/collapse-icon.png'
+    } else {
+      return 'images/expand-icon.png';
+    }
+  }
+
+  function getImgClass(expanded){
+    if (expanded) {
+      return 'expanded-img'
+    } else {
+      return 'collapsed-img';
+    }
+  }
+
+  function buildLabel(node, expanded) {
+    return $("<div class='node-label'></div>")
+        .append($("<div class='sci-name-element'></div>")
+            .append(node.scientificNameElementRecord.name_element))
+        .append($("<div class='expand-toggle'></div>")
+            .append($("<img src=''>")
+                .attr('src', getImg(expanded))
+                .addClass(getImgClass(expanded)))).html();
+  }
+
   function renderGraph(diff) {
 
     d3.selectAll(".node").remove();
     d3.selectAll(".edgePath").remove();
 
+
     Object.keys(diff.newNodes).forEach(function (id) {
       var node = diff.newNodes[id];
+
       g.setNode(id, {
-        label: node.scientificNameElementRecord.name_element,
-        //  round edges
-        class: "node-collapsed",
+        labelType: "html",
+        label: buildLabel(node, false),
         rx: 5,
         ry: 5
       });
     });
 
     Object.keys(diff.expandedNodes).forEach(function (id) {
-      delete g.node(id).class;
+      var node = g.node(id);
+      delete node.class;
+      node.label = buildLabel(diff.expandedNodes[id], true);
     });
 
     Object.keys(diff.collapsedNodes).forEach(function (id) {
-      g.node(id).class = "node-collapsed";
+      var node = g.node(id);
+      node.label = buildLabel(diff.collapsedNodes[id], false);
     });
 
     Object.keys(diff.removedNodes).forEach(function (id) {
@@ -125,19 +155,34 @@
 
     render(svgGroup, g);
 
-    svg.selectAll(".node")
-        .on("click", function (d) {
-          d3.event.preventDefault();
-          graph.toggleExpand(d);
-        })
+    $(".sci-name-element").click(function (e) {
+      e.preventDefault();
+      console.log(e.currentTarget.parentNode.__data__);
+      console.log("first");
+    });
+
+    $(".expand-toggle").click(function (e) {
+      e.preventDefault();
+      var id = e.currentTarget.parentNode.__data__;
+      graph.toggleExpand(id);
+    });
+
+//    svg.selectAll(".node")
+//        .on("click", function (d) {
+//          d3.event.preventDefault();
+//          graph.toggleExpand(d);
+//        })
 
   }
 
   graph.insert(22032961);
-
-  setTimeout(function () {
-    graph.expand(22032961);
-  }, 1000);
+  graph.insert(22032971);
+  graph.insert(22033030);
+  graph.insert(22033098);
+  graph.insert(22033121);
+  graph.insert(22033306);
+  graph.insert(22035319);
+  graph.insert(22036962);
 
 </script>
 
