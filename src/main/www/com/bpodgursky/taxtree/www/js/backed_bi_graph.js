@@ -62,8 +62,11 @@ GraphDiff.prototype.removeNode = function (id, node) {
   return this;
 };
 
-GraphDiff.prototype.select = function (select, unselect) {
-  this.selected = select;
+GraphDiff.prototype.select = function (select, detail, unselect) {
+  this.selected = {
+    id: select,
+    detail: detail
+  };
   this.unselected = unselect;
   return this;
 };
@@ -80,10 +83,10 @@ GraphDiff.noDiff = function () {
   return new GraphDiff({}, {}, {}, {}, [], [], null, null);
 };
 
-function BackedBiGraph(fetch, find, detail, idGen, onModify) {
+function BackedBiGraph(fetch, find, describe, idGen, onModify) {
   this.fetch = fetch;
   this.find = find;
-  this.detail = detail;
+  this.describe = describe;
   this.idGen = idGen;
   this.nodes = {};
   this.expanded = {};
@@ -123,11 +126,11 @@ BackedBiGraph.prototype.select = function (id) {
     return;
   }
 
-  this.find(id, function (node) {
+  this.describe(id, function (node) {
     var unselect = graph.selected;
     graph.selected = id;
     graph.detail = node;
-    graph.onModify(GraphDiff.noDiff().select(id, unselect));
+    graph.onModify(GraphDiff.noDiff().select(id, node, unselect));
   });
 
 };

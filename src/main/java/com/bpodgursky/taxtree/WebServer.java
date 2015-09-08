@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import com.bpodgursky.taxtree.servlet.DetailServlet;
 import com.bpodgursky.taxtree.servlet.ExpandServlet;
 import com.bpodgursky.taxtree.servlet.FindServlet;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -47,7 +48,7 @@ public class WebServer implements Runnable {
 
       context.addServlet(new ServletHolder(new JSONServlet(new ExpandServlet(), local)), "/expand_taxon");
       context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/find_taxon");
-      context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/detail_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new DetailServlet(), local)), "/detail_taxon");
 
       context.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 

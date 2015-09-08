@@ -6,6 +6,11 @@
     border: 1px solid #999;
 }
 
+.detail-bar {
+    width: 20%;
+    float: right;
+}
+
 .edge rect {
     fill: #fff
 }
@@ -15,7 +20,7 @@
     stroke-width: 1.5px;
 }
 
-.node{
+.node {
     cursor: pointer;
 }
 
@@ -33,7 +38,7 @@ g {
 .expand-toggle {
     display: inline-block;
     margin-left: 8px;
-    max-height:100%;
+    max-height: 100%;
 }
 
 .expanded-img {
@@ -45,10 +50,17 @@ g {
 }
 
 .sci-name-element {
+    color: #000000;
     display: inline-block;
 }
 
 .selected-node > rect {
     stroke-width: 3px;
     stroke: #49a0d4;
+}
+
+.foot {
+    display : table-row;
+    vertical-align : bottom;
+    height : 1px;
 }

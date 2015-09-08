@@ -60,7 +60,8 @@ public class QueryWrapper {
   }
 
   public TaxonDescriptionInfo detail(long taxonId) {
-    return Accessors.only(context.select()
+
+    List<TaxonDescriptionInfo> collect = context.select()
         .from(TAXON)
         .leftOuterJoin(TAXON_NAME_ELEMENT)
         .on(TAXON.ID.equal(TAXON_NAME_ELEMENT.TAXON_ID))
@@ -70,12 +71,24 @@ public class QueryWrapper {
         .on(TAXON.TAXONOMIC_RANK_ID.equal(TAXONOMIC_RANK.ID))
         .leftOuterJoin(SOURCE_DATABASE)
         .on(TAXON.SOURCE_DATABASE_ID.equal(SOURCE_DATABASE.ID))
+        .leftOuterJoin(COMMON_NAME)
+        .on(COMMON_NAME.TAXON_ID.equal(TAXON.ID))
+        .leftOuterJoin(COMMON_NAME_ELEMENT)
+        .on(COMMON_NAME.COMMON_NAME_ELEMENT_ID.equal(COMMON_NAME_ELEMENT.ID))
         .where(TAXON.ID.equal(UInteger.valueOf(taxonId))).fetch().stream().map(record -> new TaxonDescriptionInfo(
             record.into(TAXON),
             record.into(TAXON_NAME_ELEMENT),
             record.into(SCIENTIFIC_NAME_ELEMENT),
             record.into(TAXONOMIC_RANK),
-            record.into(SOURCE_DATABASE))).collect(Collectors.toList()));
+            record.into(SOURCE_DATABASE),
+            record.into(COMMON_NAME),
+            record.into(COMMON_NAME_ELEMENT))).collect(Collectors.toList());
+
+    for (TaxonDescriptionInfo taxonDescriptionInfo : collect) {
+      System.out.println(taxonDescriptionInfo);
+    }
+
+    return Accessors.only(collect);
 
   }
 

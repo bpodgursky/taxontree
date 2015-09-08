@@ -7,16 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script type="text/javascript" src="resources/jquery-2.1.4.min.js"></script>
-  <script type="text/javascript" src="js/multimap.js"></script>
-  <script type="text/javascript" src="js/bimap.js"></script>
-  <script type="text/javascript" src="js/backed_bi_graph.js"></script>
-
+  <script type="text/javascript" src="resources/bootstrap.min.js"></script>
   <script type="text/javascript" src="resources/d3.v3.min.js" charset="utf-8"></script>
   <script type="text/javascript" src="resources/dagre-d3.js"></script>
   <script type="text/javascript" src="resources/underscore-min.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="css/taxtree.css">
+  <script type="text/javascript" src="js/multimap.js"></script>
+  <script type="text/javascript" src="js/bimap.js"></script>
+  <script type="text/javascript" src="js/backed_bi_graph.js"></script>
 
+  <link rel="stylesheet" type="text/css" href="resources/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/taxtree.css">
 
 </head>
 
@@ -27,6 +28,42 @@
   <svg id="svg-canvas" class="main-svg">
     <g transform="translate(20, 20)"/>
   </svg>
+</div>
+
+<div class="detail-bar">
+  <table class="table">
+    <tbody>
+    <tr>
+      <td>Name</td>
+      <td id="tx_name"></td>
+    </tr>
+    <tr>
+      <td>Rank</td>
+      <td id="tx_rank"></td>
+    </tr>
+    <tr>
+      <td>Common Name</td>
+      <td id="tx_common_name"></td>
+    </tr>
+    <tr>
+      <td>Source Database</td>
+      <td id="tx_source_database"></td>
+    </tr>
+    <tr>
+      <td>Database Authors</td>
+      <td id="tx_database_authors"></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <footer>
+
+    Website by <a href="http://www.bpodgursky.com">Ben Podgursky</a><br><br>
+
+    Data from the <i> Species 2000 & ITIS Catalogue of Life: 2013 Annual Checklist</i>
+    (<a href="http://www.catalogueoflife.org/">Catalogue of Life</a>)
+  </footer>
+
 </div>
 
 </body>
@@ -125,13 +162,17 @@
                 .addClass(getImgClass(expanded)))).html();
   }
 
-  function renderGraph(diff) {
+  function pad(text){
+    if(!text){
+      return "";
+    }
+    return text;
+  }
 
-    console.log(diff);
+  function renderGraph(diff) {
 
     d3.selectAll(".node").remove();
     d3.selectAll(".edgePath").remove();
-
 
     Object.keys(diff.newNodes).forEach(function (id) {
       var node = diff.newNodes[id];
@@ -153,11 +194,21 @@
       g.node(id).label = buildLabel(diff.collapsedNodes[id], false);
     });
 
-    if(diff.selected){
-      g.node(diff.selected).class = 'selected-node';
+    if (diff.selected) {
+      g.node(diff.selected.id).class = 'selected-node';
+
+      var detail = diff.selected.detail;
+      console.log(detail);
+
+      $("#tx_name").text(pad(detail.scientificNameElementRecord.name_element));
+      $("#tx_rank").text(pad(detail.taxonomicRank.rank));
+      $("#tx_common_name").text(pad(detail.commonNameElementRecord.name));
+      $("#tx_source_database").text(pad(detail.sourceDatabase.abbreviated_name));
+      $("#tx_database_authors").text(pad(detail.sourceDatabase.authors_and_editors));
+
     }
 
-    if(diff.unselected){
+    if (diff.unselected) {
       var node = g.node(diff.unselected);
       node.class = _.without(node.class.split(' '), 'selected-node');
     }
@@ -189,7 +240,7 @@
 
     $(".node").click(function (e) {
       e.preventDefault();
-      console.log("selecting: "+e.currentTarget.__data__)
+      console.log("selecting: " + e.currentTarget.__data__)
       graph.select(e.currentTarget.__data__);
     });
 
