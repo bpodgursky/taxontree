@@ -47,6 +47,7 @@ public class WebServer implements Runnable {
 
       context.addServlet(new ServletHolder(new JSONServlet(new ExpandServlet(), local)), "/expand_taxon");
       context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/find_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/detail_taxon");
 
       context.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 

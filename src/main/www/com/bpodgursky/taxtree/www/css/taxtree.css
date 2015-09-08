@@ -2,7 +2,7 @@
     position: fixed;
     left: 0;
     height: 1000px;
-    width: 100%;
+    width: 80%;
     border: 1px solid #999;
 }
 
@@ -13,6 +13,10 @@
 .edgePath path {
     stroke: #333;
     stroke-width: 1.5px;
+}
+
+.node{
+    cursor: pointer;
 }
 
 .node > rect {
@@ -26,13 +30,9 @@ g {
     pointer-events: all;
 }
 
-.node {
-}
-
 .expand-toggle {
     display: inline-block;
     margin-left: 8px;
-    cursor: pointer;
     max-height:100%;
 }
 
@@ -46,4 +46,9 @@ g {
 
 .sci-name-element {
     display: inline-block;
+}
+
+.selected-node > rect {
+    stroke-width: 3px;
+    stroke: #49a0d4;
 }

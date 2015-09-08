@@ -1,10 +1,12 @@
-function GraphDiff(newNodes, removedNodes, expandedNodes, collapsedNodes, newEdges, removedEdges) {
+function GraphDiff(newNodes, removedNodes, expandedNodes, collapsedNodes, newEdges, removedEdges, selected, unselected) {
   this.newNodes = newNodes;
   this.removedNodes = removedNodes;
   this.expandedNodes = expandedNodes;
   this.collapsedNodes = collapsedNodes;
   this.newEdges = newEdges;
   this.removedEdges = removedEdges;
+  this.selected = selected;
+  this.unselected = unselected;
 }
 
 GraphDiff.prototype.absorb = function (otherDiff) {
@@ -34,24 +36,65 @@ GraphDiff.prototype.absorb = function (otherDiff) {
     diff.removedEdges.push(e);
   });
 
+  diff.selected = otherDiff.selected;
+  diff.unselected = otherDiff.unselected;
+
+  return this;
 };
 
-function noDiff() {
-  return new GraphDiff({}, {}, {}, {}, [], []);
-}
+GraphDiff.prototype.expand = function (id, node) {
+  this.expandedNodes[id] = node;
+  return this;
+};
 
-function BackedBiGraph(fetch, find, idGen, onModify) {
+GraphDiff.prototype.collapse = function (id, node) {
+  this.collapsedNodes[id] = node;
+  return this;
+};
+
+GraphDiff.prototype.addNode = function (id, node) {
+  this.newNodes[id] = node;
+  return this;
+};
+
+GraphDiff.prototype.removeNode = function (id, node) {
+  this.removedNodes[id] = node;
+  return this;
+};
+
+GraphDiff.prototype.select = function (select, unselect) {
+  this.selected = select;
+  this.unselected = unselect;
+  return this;
+};
+
+GraphDiff.prototype.addEdge = function (source, target) {
+  this.newEdges.push({
+    source: source,
+    target: target
+  });
+  return this;
+};
+
+GraphDiff.noDiff = function () {
+  return new GraphDiff({}, {}, {}, {}, [], [], null, null);
+};
+
+function BackedBiGraph(fetch, find, detail, idGen, onModify) {
   this.fetch = fetch;
   this.find = find;
+  this.detail = detail;
   this.idGen = idGen;
   this.nodes = {};
   this.expanded = {};
+  this.selected = null;
+  this.detail = null;
   this.edges = new BiMap();
   this.onModify = onModify;
 }
 
-BackedBiGraph.prototype.nodeMap = function () {
-  return this.nodes;
+BackedBiGraph.prototype.node = function (id) {
+  return this.nodes[id];
 };
 
 BackedBiGraph.prototype.edgeSet = function () {
@@ -67,6 +110,28 @@ BackedBiGraph.prototype.edgeSet = function () {
   return edges;
 };
 
+BackedBiGraph.prototype.select = function (id) {
+  var graph = this;
+
+  //  only select after inserting
+  if(!this.nodes[id]){
+    return;
+  }
+
+  //  no change
+  if (this.selected == id) {
+    return;
+  }
+
+  this.find(id, function (node) {
+    var unselect = graph.selected;
+    graph.selected = id;
+    graph.detail = node;
+    graph.onModify(GraphDiff.noDiff().select(id, unselect));
+  });
+
+};
+
 BackedBiGraph.prototype.insert = function (id) {
 
   //  it's already in the graph
@@ -80,10 +145,10 @@ BackedBiGraph.prototype.insert = function (id) {
 
 };
 
-BackedBiGraph.prototype.toggleExpand = function(id){
-  if(this.expanded[id]){
+BackedBiGraph.prototype.toggleExpand = function (id) {
+  if (this.expanded[id]) {
     this.collapse(id);
-  }else{
+  } else {
     this.expand(id);
   }
 };
@@ -102,7 +167,7 @@ BackedBiGraph.prototype.expand = function (id) {
   }
 
   this.fetch(id, function (parents, children) {
-    var diff = new GraphDiff({}, {}, obj(id, node), {}, [], []);
+    var diff = GraphDiff.noDiff().expand(id, node);
 
     parents.forEach(function (e) {
       var parentId = graph.idGen(e);
@@ -119,8 +184,6 @@ BackedBiGraph.prototype.expand = function (id) {
 
     children.forEach(function (e) {
       var childId = graph.idGen(e);
-
-      console.log(childId);
 
       diff.absorb(
           graph._insertNode(childId, e)
@@ -147,7 +210,7 @@ BackedBiGraph.prototype.collapse = function (id) {
     return;
   }
 
-  var diff = new GraphDiff({}, {}, {}, obj(id, node), [], []);
+  var diff = GraphDiff.noDiff().collapse(id, node);
 
   this.gatherChildren(id).forEach(function (e) {
     diff.absorb(graph._remove(e));
@@ -184,27 +247,22 @@ BackedBiGraph.prototype.remove = function (id) {
 BackedBiGraph.prototype._insertNode = function (id, node) {
 
   if (graph.nodes[id]) {
-    return noDiff();
+    return GraphDiff.noDiff();
   }
 
   graph.nodes[id] = node;
-
-  return new GraphDiff(obj(id, node), {}, {}, {}, [], []);
+  return GraphDiff.noDiff().addNode(id, node);
 
 };
 
 BackedBiGraph.prototype._insertEdge = function (id, child) {
 
   if (graph.edges.getKey(id)[child]) {
-    return noDiff();
+    return GraphDiff.noDiff();
   }
 
   graph.edges.put(id, child);
-  return new GraphDiff({}, {}, {}, {}, [{
-    source: id,
-    target: child
-  }], []);
-
+  return new GraphDiff.noDiff().addEdge(id, child);
 };
 
 BackedBiGraph.prototype._remove = function (id) {
@@ -213,7 +271,7 @@ BackedBiGraph.prototype._remove = function (id) {
   var node = this.nodes[id];
   if (!node) {
     //  nothing to do
-    return noDiff();
+    return GraphDiff.noDiff();
   }
 
   var removedEdges = [];
@@ -233,35 +291,45 @@ BackedBiGraph.prototype._remove = function (id) {
     })
   });
 
-  delete this.nodes[id];
 
   if (graph.expanded[id]) {
     collapsedNodes[id] = graph.nodes[id];
   }
 
-  delete graph.expanded[id];
-
   this.edges.getKey(id).forEach(function (e) {
-    if (graph.expanded[e]) {
-      collapsedNodes[e] = graph.nodes[e];
-      delete graph.expanded[e];
+    if (graph.nodes[e]) {
+      if (graph.expanded[e]) {
+        collapsedNodes[e] = graph.nodes[e];
+        delete graph.expanded[e];
+      }
     }
   });
 
   this.edges.getVal(id).forEach(function (e) {
-    if (graph.expanded[e]) {
-      collapsedNodes[id] = graph.nodes[e];
-      delete graph.expanded[e];
+    if (graph.nodes[e]) {
+      if (graph.expanded[e]) {
+        collapsedNodes[id] = graph.nodes[e];
+        delete graph.expanded[e];
+      }
     }
   });
 
   this.edges.removeAll(id);
 
-  return new GraphDiff({}, obj(id, node), {}, collapsedNodes, [], [removedEdges]);
+  var unselect = null;
+  if (this.selected == id) {
+    this.selected = null;
+    unselect = id;
+  }
+
+  delete this.nodes[id];
+  delete this.expanded[id];
+
+  return new GraphDiff({}, obj(id, node), {}, collapsedNodes, [], [removedEdges], null, unselect);
 };
 
 
-function obj(id, node){
+function obj(id, node) {
   var obj = {};
   obj[id] = node;
   return obj;
