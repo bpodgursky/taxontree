@@ -39,7 +39,7 @@ public class WebServer implements Runnable {
     try {
 
       Server uiServer = new Server(45321);
-      uiServer.setThreadPool(new ExecutorThreadPool(20, 20, 15, TimeUnit.MINUTES));
+      uiServer.setThreadPool(new ExecutorThreadPool(0, 20, 15, TimeUnit.MINUTES));
       final URL warUrl = uiServer.getClass().getClassLoader().getResource("com/bpodgursky/taxtree/www");
       final String warUrlString = warUrl.toExternalForm();
 
