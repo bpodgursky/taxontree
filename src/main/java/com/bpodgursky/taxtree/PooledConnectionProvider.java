@@ -24,7 +24,13 @@ public class PooledConnectionProvider implements ConnectionProvider {
   @Override
   public Connection acquire() throws DataAccessException {
     try {
-      return connectionPool.getConnection();
+      System.out.println("getting connection....");
+      System.out.println(connectionPool.getInitialSize());
+      System.out.println(connectionPool.getNumActive());
+      System.out.println(connectionPool.getNumIdle());
+      Connection conn = connectionPool.getConnection();
+      System.out.println("got connection");
+      return conn;
     } catch (SQLException e) {
       throw new DataAccessException("Failed to open connection", e);
     }
@@ -32,6 +38,10 @@ public class PooledConnectionProvider implements ConnectionProvider {
 
   @Override
   public void release(Connection connection) throws DataAccessException {
-    //  no op?
+    try {
+      connection.close();
+    } catch (SQLException e) {
+      throw new DataAccessException("Failed closing connection!", e);
+    }
   }
 }
