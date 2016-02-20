@@ -24,13 +24,7 @@ public class PooledConnectionProvider implements ConnectionProvider {
   @Override
   public Connection acquire() throws DataAccessException {
     try {
-      System.out.println("getting connection....");
-      System.out.println(connectionPool.getInitialSize());
-      System.out.println(connectionPool.getNumActive());
-      System.out.println(connectionPool.getNumIdle());
-      Connection conn = connectionPool.getConnection();
-      System.out.println("got connection");
-      return conn;
+      return connectionPool.getConnection();
     } catch (SQLException e) {
       throw new DataAccessException("Failed to open connection", e);
     }
