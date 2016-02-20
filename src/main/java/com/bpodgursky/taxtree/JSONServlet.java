@@ -19,10 +19,10 @@ public class JSONServlet extends HttpServlet {
 
   private static final Gson GSON = new Gson();
 
-  private final ThreadLocal<QueryWrapper> queryWrapper;
+  private final QueryWrapper queryWrapper;
   private final Processor processor;
 
-  public JSONServlet(Processor processor, ThreadLocal<QueryWrapper> queryWrapper) {
+  public JSONServlet(Processor processor, QueryWrapper queryWrapper) {
     this.processor = processor;
     this.queryWrapper = queryWrapper;
   }
@@ -41,7 +41,7 @@ public class JSONServlet extends HttpServlet {
     try {
 
       long start = System.currentTimeMillis();
-      Object data = processor.getData(queryWrapper.get(), entries);
+      Object data = processor.getData(queryWrapper, entries);
 
       LOG.info("Request " + getRequestURL(req) + " processed in " + (System.currentTimeMillis() - start) + "ms");
       String originHeader = req.getHeader("Origin");

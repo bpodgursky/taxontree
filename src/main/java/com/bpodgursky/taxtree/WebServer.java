@@ -39,16 +39,17 @@ public class WebServer implements Runnable {
     try {
 
       Server uiServer = new Server(45321);
-      uiServer.setThreadPool(new ExecutorThreadPool(0, 20, 15, TimeUnit.MINUTES));
+      uiServer.setThreadPool(new ExecutorThreadPool(20, 20, 15, TimeUnit.MINUTES));
       final URL warUrl = uiServer.getClass().getClassLoader().getResource("com/bpodgursky/taxtree/www");
       final String warUrlString = warUrl.toExternalForm();
 
-      ThreadLocalConnection local = new ThreadLocalConnection(url, userName, password);
       WebAppContext context = new WebAppContext(warUrlString, "/");
 
-      context.addServlet(new ServletHolder(new JSONServlet(new ExpandServlet(), local)), "/expand_taxon");
-      context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), local)), "/find_taxon");
-      context.addServlet(new ServletHolder(new JSONServlet(new DetailServlet(), local)), "/detail_taxon");
+      QueryWrapper wrapper = new QueryWrapper(new PooledConnectionProvider(userName, password, url, "com.mysql.jdbc.Driver"));
+
+      context.addServlet(new ServletHolder(new JSONServlet(new ExpandServlet(), wrapper)), "/expand_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new FindServlet(), wrapper)), "/find_taxon");
+      context.addServlet(new ServletHolder(new JSONServlet(new DetailServlet(), wrapper)), "/detail_taxon");
 
       context.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 

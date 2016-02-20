@@ -1,6 +1,5 @@
 package com.bpodgursky.taxtree;
 
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,6 +9,7 @@ import com.bpodgursky.taxtree.tables.Taxon;
 import com.bpodgursky.taxtree.tables.TaxonNameElement;
 import com.google.common.collect.Lists;
 import org.jooq.Condition;
+import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -30,9 +30,10 @@ public class QueryWrapper {
 
   private final DSLContext context;
 
-  public QueryWrapper(Connection conn) {
+  public QueryWrapper(ConnectionProvider conn) {
     this.context = DSL.using(conn, SQLDialect.MYSQL);
   }
+
 
   public Collection<TaxonNodeInfo> parents(long childTaxonId) {
 
